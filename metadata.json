@@ -1,0 +1,6 @@
+{
+  "name": "AuraEcho - Anonymous Emotion Sharing & Connections",
+  "description": "A safe, anonymous sanctuary where people share their real emotions freely without revealing identities, exchange empathy, and connect via private 1-on-1 messages.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

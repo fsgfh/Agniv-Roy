@@ -1,0 +1,238 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'mroy4957@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['userId', 'pseudonym', 'auraColor', 'avatarSymbol', 'openToMessages', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'pseudonym', 'auraColor', 'avatarSymbol', 'bio', 'openToMessages', 'createdAt']) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.pseudonym is string && data.pseudonym.size() >= 2 && data.pseudonym.size() <= 60 &&
+        data.auraColor is string && data.auraColor.size() <= 30 &&
+        data.avatarSymbol is string && data.avatarSymbol.size() <= 20 &&
+        (!('bio' in data) || (data.bio is string && data.bio.size() <= 300)) &&
+        data.openToMessages is bool &&
+        (data.createdAt is string || data.createdAt is timestamp);
+    }
+
+    function isValidPrivateUserInfo(data) {
+      return data.keys().hasAll(['userId', 'email', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'email', 'createdAt']) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.email is string && data.email.size() <= 255 &&
+        (data.createdAt is string || data.createdAt is timestamp);
+    }
+
+    function isValidEmotionPost(data) {
+      return data.keys().hasAll(['id', 'authorId', 'authorPseudonym', 'authorAuraColor', 'authorAvatarSymbol', 'emotionCategory', 'intensity', 'content', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'authorId', 'authorPseudonym', 'authorAuraColor', 'authorAvatarSymbol', 'emotionCategory', 'intensity', 'title', 'content', 'soundscape', 'supportCount', 'commentsCount', 'createdAt']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.authorId is string && data.authorId.size() <= 128 &&
+        data.authorPseudonym is string && data.authorPseudonym.size() <= 60 &&
+        data.authorAuraColor is string && data.authorAuraColor.size() <= 30 &&
+        data.authorAvatarSymbol is string && data.authorAvatarSymbol.size() <= 20 &&
+        data.emotionCategory is string && data.emotionCategory.size() <= 40 &&
+        data.intensity is number && data.intensity >= 1 && data.intensity <= 5 &&
+        (!('title' in data) || (data.title is string && data.title.size() <= 120)) &&
+        data.content is string && data.content.size() >= 1 && data.content.size() <= 2000 &&
+        (!('soundscape' in data) || (data.soundscape is string && data.soundscape.size() <= 50)) &&
+        (!('supportCount' in data) || (data.supportCount is number && data.supportCount >= 0)) &&
+        (!('commentsCount' in data) || (data.commentsCount is number && data.commentsCount >= 0)) &&
+        (data.createdAt is string || data.createdAt is timestamp);
+    }
+
+    function isValidComment(data) {
+      return data.keys().hasAll(['id', 'emotionId', 'authorId', 'authorPseudonym', 'authorAuraColor', 'authorAvatarSymbol', 'content', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'emotionId', 'authorId', 'authorPseudonym', 'authorAuraColor', 'authorAvatarSymbol', 'content', 'createdAt']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.emotionId is string && data.emotionId.size() <= 128 &&
+        data.authorId is string && data.authorId.size() <= 128 &&
+        data.authorPseudonym is string && data.authorPseudonym.size() <= 60 &&
+        data.authorAuraColor is string && data.authorAuraColor.size() <= 30 &&
+        data.authorAvatarSymbol is string && data.authorAvatarSymbol.size() <= 20 &&
+        data.content is string && data.content.size() >= 1 && data.content.size() <= 800 &&
+        (data.createdAt is string || data.createdAt is timestamp);
+    }
+
+    function isValidReaction(data) {
+      return data.keys().hasAll(['id', 'emotionId', 'userId', 'reactionType', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'emotionId', 'userId', 'reactionType', 'createdAt']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.emotionId is string && data.emotionId.size() <= 128 &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.reactionType is string && data.reactionType.size() <= 30 &&
+        (data.createdAt is string || data.createdAt is timestamp);
+    }
+
+    function isValidConversation(data) {
+      return data.keys().hasAll(['id', 'participant1Id', 'participant2Id', 'participant1Pseudonym', 'participant2Pseudonym', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'participant1Id', 'participant2Id', 'participant1Pseudonym', 'participant2Pseudonym', 'participant1Aura', 'participant2Aura', 'participant1Avatar', 'participant2Avatar', 'lastMessage', 'lastMessageTime', 'lastSenderId', 'createdAt']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.participant1Id is string && data.participant1Id.size() <= 128 &&
+        data.participant2Id is string && data.participant2Id.size() <= 128 &&
+        data.participant1Pseudonym is string && data.participant1Pseudonym.size() <= 60 &&
+        data.participant2Pseudonym is string && data.participant2Pseudonym.size() <= 60 &&
+        (!('lastMessage' in data) || (data.lastMessage is string && data.lastMessage.size() <= 500)) &&
+        (!('lastSenderId' in data) || (data.lastSenderId is string && data.lastSenderId.size() <= 128)) &&
+        (data.createdAt is string || data.createdAt is timestamp);
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['id', 'conversationId', 'senderId', 'senderPseudonym', 'text', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'conversationId', 'senderId', 'senderPseudonym', 'senderAura', 'senderAvatar', 'text', 'createdAt']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.conversationId is string && data.conversationId.size() <= 128 &&
+        data.senderId is string && data.senderId.size() <= 128 &&
+        data.senderPseudonym is string && data.senderPseudonym.size() <= 60 &&
+        data.text is string && data.text.size() >= 1 && data.text.size() <= 1500 &&
+        (data.createdAt is string || data.createdAt is timestamp);
+    }
+
+    function isValidDailyCheckin(data) {
+      return data.keys().hasAll(['id', 'userId', 'date', 'emotionCategory', 'moodScore', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'userId', 'date', 'emotionCategory', 'moodScore', 'energyLevel', 'reflection', 'createdAt']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.date is string && data.date.size() <= 20 &&
+        data.emotionCategory is string && data.emotionCategory.size() <= 40 &&
+        data.moodScore is number && data.moodScore >= 1 && data.moodScore <= 10 &&
+        (!('energyLevel' in data) || (data.energyLevel is string && data.energyLevel.size() <= 20)) &&
+        (!('reflection' in data) || (data.reflection is string && data.reflection.size() <= 500)) &&
+        (data.createdAt is string || data.createdAt is timestamp);
+    }
+
+    // Public Anonymous User Profiles
+    match /users/{userId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId) &&
+        isValidUserProfile(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidId(userId) &&
+        isValidUserProfile(incoming()) && incoming().userId == existing().userId &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['pseudonym', 'auraColor', 'avatarSymbol', 'bio', 'openToMessages']);
+      allow delete: if false;
+
+      // Private PII subcollection (Strictly isolated to owner)
+      match /private/info {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow write: if isSignedIn() && request.auth.uid == userId && isValidPrivateUserInfo(incoming()) && incoming().userId == request.auth.uid;
+      }
+
+      // Private Daily Emotional Check-ins (Isolated to user)
+      match /checkins/{checkinId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(checkinId) &&
+          isValidDailyCheckin(incoming()) && incoming().userId == request.auth.uid && incoming().id == checkinId;
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(checkinId) &&
+          isValidDailyCheckin(incoming()) && incoming().userId == existing().userId && incoming().id == existing().id &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['emotionCategory', 'moodScore', 'energyLevel', 'reflection']);
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(checkinId);
+      }
+    }
+
+    // Emotions collection
+    match /emotions/{emotionId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(emotionId) &&
+        isValidEmotionPost(incoming()) &&
+        incoming().authorId == request.auth.uid &&
+        incoming().id == emotionId;
+      allow update: if isSignedIn() && isValidId(emotionId) &&
+        isValidEmotionPost(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().authorId == existing().authorId && (
+          (request.auth.uid == existing().authorId && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'emotionCategory', 'intensity', 'soundscape'])) ||
+          (incoming().diff(existing()).affectedKeys().hasOnly(['supportCount', 'commentsCount']))
+        );
+      allow delete: if isSignedIn() && isValidId(emotionId) &&
+        (request.auth.uid == existing().authorId || isAdmin());
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow get, list: if isSignedIn() && isValidId(emotionId);
+        allow create: if isSignedIn() && isValidId(emotionId) && isValidId(commentId) &&
+          isValidComment(incoming()) &&
+          incoming().authorId == request.auth.uid &&
+          incoming().emotionId == emotionId &&
+          incoming().id == commentId;
+        allow delete: if isSignedIn() && isValidId(emotionId) && isValidId(commentId) &&
+          (request.auth.uid == existing().authorId || isAdmin());
+        allow update: if false;
+      }
+
+      // Reactions subcollection
+      match /reactions/{reactionId} {
+        allow get, list: if isSignedIn() && isValidId(emotionId);
+        allow create, update: if isSignedIn() && isValidId(emotionId) && isValidId(reactionId) &&
+          isValidReaction(incoming()) &&
+          incoming().userId == request.auth.uid &&
+          incoming().emotionId == emotionId &&
+          incoming().id == reactionId;
+        allow delete: if isSignedIn() && isValidId(emotionId) && isValidId(reactionId) &&
+          existing().userId == request.auth.uid;
+      }
+    }
+
+    // Conversations (Private 1-on-1 between two users)
+    match /conversations/{conversationId} {
+      allow get, list: if isSignedIn() && isValidId(conversationId) &&
+        (resource.data.participant1Id == request.auth.uid || resource.data.participant2Id == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(conversationId) &&
+        isValidConversation(incoming()) &&
+        incoming().id == conversationId &&
+        (incoming().participant1Id == request.auth.uid || incoming().participant2Id == request.auth.uid);
+      allow update: if isSignedIn() && isValidId(conversationId) &&
+        isValidConversation(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().participant1Id == existing().participant1Id &&
+        incoming().participant2Id == existing().participant2Id &&
+        (existing().participant1Id == request.auth.uid || existing().participant2Id == request.auth.uid) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['lastMessage', 'lastMessageTime', 'lastSenderId', 'participant1Pseudonym', 'participant2Pseudonym', 'participant1Aura', 'participant2Aura', 'participant1Avatar', 'participant2Avatar']);
+      allow delete: if isSignedIn() && isValidId(conversationId) &&
+        (existing().participant1Id == request.auth.uid || existing().participant2Id == request.auth.uid);
+
+      // Messages in conversation
+      match /messages/{messageId} {
+        allow get, list: if isSignedIn() && isValidId(conversationId) && isValidId(messageId) &&
+          (get(/databases/$(database)/documents/conversations/$(conversationId)).data.participant1Id == request.auth.uid ||
+           get(/databases/$(database)/documents/conversations/$(conversationId)).data.participant2Id == request.auth.uid);
+        allow create: if isSignedIn() && isValidId(conversationId) && isValidId(messageId) &&
+          isValidMessage(incoming()) &&
+          incoming().senderId == request.auth.uid &&
+          incoming().conversationId == conversationId &&
+          incoming().id == messageId &&
+          (get(/databases/$(database)/documents/conversations/$(conversationId)).data.participant1Id == request.auth.uid ||
+           get(/databases/$(database)/documents/conversations/$(conversationId)).data.participant2Id == request.auth.uid);
+        allow update, delete: if false;
+      }
+    }
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public anonymous profile for a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "pseudonym": { "type": "string", "maxLength": 60 },
+        "auraColor": { "type": "string", "maxLength": 30 },
+        "avatarSymbol": { "type": "string", "maxLength": 20 },
+        "bio": { "type": "string", "maxLength": 300 },
+        "openToMessages": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "pseudonym", "auraColor", "avatarSymbol", "openToMessages", "createdAt"]
+    },
+    "PrivateUserInfo": {
+      "title": "PrivateUserInfo",
+      "description": "Private sensitive user info visible only to the account owner",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 255 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email", "createdAt"]
+    },
+    "EmotionPost": {
+      "title": "EmotionPost",
+      "description": "Anonymous emotion shared by a user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorPseudonym": { "type": "string", "maxLength": 60 },
+        "authorAuraColor": { "type": "string", "maxLength": 30 },
+        "authorAvatarSymbol": { "type": "string", "maxLength": 20 },
+        "emotionCategory": { "type": "string", "maxLength": 40 },
+        "intensity": { "type": "number" },
+        "title": { "type": "string", "maxLength": 120 },
+        "content": { "type": "string", "maxLength": 2000 },
+        "soundscape": { "type": "string", "maxLength": 50 },
+        "supportCount": { "type": "number" },
+        "commentsCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "authorId", "authorPseudonym", "authorAuraColor", "authorAvatarSymbol", "emotionCategory", "intensity", "content", "createdAt"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "Anonymous supportive message or comment on an emotion post",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "emotionId": { "type": "string", "maxLength": 128 },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorPseudonym": { "type": "string", "maxLength": 60 },
+        "authorAuraColor": { "type": "string", "maxLength": 30 },
+        "authorAvatarSymbol": { "type": "string", "maxLength": 20 },
+        "content": { "type": "string", "maxLength": 800 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "emotionId", "authorId", "authorPseudonym", "authorAuraColor", "authorAvatarSymbol", "content", "createdAt"]
+    },
+    "Reaction": {
+      "title": "Reaction",
+      "description": "Empathy resonance reaction on an emotion post",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "emotionId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "reactionType": { "type": "string", "maxLength": 30 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "emotionId", "userId", "reactionType", "createdAt"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Direct private 1-on-1 anonymous message thread between two users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "participant1Id": { "type": "string", "maxLength": 128 },
+        "participant2Id": { "type": "string", "maxLength": 128 },
+        "participant1Pseudonym": { "type": "string", "maxLength": 60 },
+        "participant2Pseudonym": { "type": "string", "maxLength": 60 },
+        "participant1Aura": { "type": "string", "maxLength": 30 },
+        "participant2Aura": { "type": "string", "maxLength": 30 },
+        "participant1Avatar": { "type": "string", "maxLength": 20 },
+        "participant2Avatar": { "type": "string", "maxLength": 20 },
+        "lastMessage": { "type": "string", "maxLength": 500 },
+        "lastMessageTime": { "type": "string", "format": "date-time" },
+        "lastSenderId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "participant1Id", "participant2Id", "participant1Pseudonym", "participant2Pseudonym", "createdAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Individual 1-on-1 private message within a conversation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "conversationId": { "type": "string", "maxLength": 128 },
+        "senderId": { "type": "string", "maxLength": 128 },
+        "senderPseudonym": { "type": "string", "maxLength": 60 },
+        "senderAura": { "type": "string", "maxLength": 30 },
+        "senderAvatar": { "type": "string", "maxLength": 20 },
+        "text": { "type": "string", "maxLength": 1500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "conversationId", "senderId", "senderPseudonym", "text", "createdAt"]
+    },
+    "DailyCheckin": {
+      "title": "DailyCheckin",
+      "description": "Daily private emotional check-in for a user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 20 },
+        "emotionCategory": { "type": "string", "maxLength": 40 },
+        "moodScore": { "type": "number" },
+        "energyLevel": { "type": "string", "maxLength": 20 },
+        "reflection": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "date", "emotionCategory", "moodScore", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Public anonymous profile of an user"
+    },
+    "/users/{userId}/private/info": {
+      "schema": "PrivateUserInfo",
+      "description": "Private PII information strictly isolated to the user"
+    },
+    "/users/{userId}/checkins/{checkinId}": {
+      "schema": "DailyCheckin",
+      "description": "Private daily emotional check-in records for trend analysis"
+    },
+    "/emotions/{emotionId}": {
+      "schema": "EmotionPost",
+      "description": "Collection of anonymous emotion expressions"
+    },
+    "/emotions/{emotionId}/comments/{commentId}": {
+      "schema": "Comment",
+      "description": "Empathetic comments on an emotion post"
+    },
+    "/emotions/{emotionId}/reactions/{reactionId}": {
+      "schema": "Reaction",
+      "description": "Supportive reaction icons placed on an emotion post"
+    },
+    "/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "Private 1-on-1 conversation channel between two anonymous users"
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Private messages exchanged between the two participants"
+    }
+  }
+}
